@@ -1,9 +1,8 @@
 <?php
 
+namespace HuanL\Db\Driver\MySQL;
 
-namespace HuanL\Db\Driver;
-
-
+use PDO;
 use HuanL\Db\DbConnect;
 
 class MySQLDBConnect extends DbConnect {
@@ -18,11 +17,10 @@ class MySQLDBConnect extends DbConnect {
      * @param int $port
      */
     public function __construct(string $user, string $passwd, string $db,
-                                string $localhost = 'localhost', int $port = 3306
-    ) {
+                                string $localhost = 'localhost', int $port = 3306) {
         parent::__construct('mysql', [
             'dbname' => $db, 'host' => $localhost, 'port' => $port
-        ], $user, $passwd);
+        ], $user, $passwd, [PDO::ATTR_PERSISTENT => true]);
     }
 
 
