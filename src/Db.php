@@ -13,7 +13,7 @@ class Db {
      * 连接对象
      * @var DbConnect
      */
-    private $dbConnect = null;
+    protected $dbConnect = null;
 
     public function __construct(DbConnect $dbConnect = null) {
         $this->dbConnect = $dbConnect;

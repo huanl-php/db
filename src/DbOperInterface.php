@@ -17,19 +17,19 @@ interface DbOperInterface {
      * @param $value
      * @return Db
      */
-    public function where($field, $operator = '=', $value = ''): Db;
+    public function where($field, $operator = '=', $value = ''): DbOperInterface;
 
     /**
      * or运算符
      * @return Db
      */
-    public function _or(): Db;
+    public function _or(): DbOperInterface;
 
     /**
      * and运算符
      * @return Db
      */
-    public function _and(): Db;
+    public function _and(): DbOperInterface;
 
     /**
      * 插入数据

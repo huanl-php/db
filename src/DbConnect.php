@@ -7,8 +7,8 @@ use PDO;
 
 /**
  * Class DbConnect
- * @method int errorCode():void
- * @method
+ * @method int errorCode()
+ * @method array errorInfo()
  * @package HuanL\Db
  */
 class DbConnect {
@@ -102,6 +102,16 @@ class DbConnect {
      */
     public function query($statement, int $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array()) {
         return $this->pdo->query($statement, $mode, $arg3, $ctorargs);
+    }
+
+    /**
+     * 预处理SQL语句,防注入必备
+     * @param $statement
+     * @param array $driver_options
+     * @return bool|\PDOStatement
+     */
+    public function prepare($statement, array $driver_options = []) {
+        return $this->pdo->prepare($statement, $driver_options);
     }
 
     /**
