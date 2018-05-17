@@ -36,10 +36,34 @@ class SQLDb extends Db implements DbOperInterface {
     protected $field = '*';
 
     /**
+     * 联合查询
+     * @var string
+     */
+    protected $join = '';
+
+    /**
      * 条件语句
      * @var string
      */
     protected $where = '';
+
+    /**
+     * 分页
+     * @var string
+     */
+    protected $limit = '';
+
+    /**
+     * 排序
+     * @var string
+     */
+    protected $order = '';
+
+    /**
+     * 分组
+     * @var string
+     */
+    protected $group = '';
 
     /**
      * 记录最后一个PDOStatement对象
@@ -135,7 +159,11 @@ class SQLDb extends Db implements DbOperInterface {
         $this->where = '';
         $this->logicOperator = '';
         $this->sql = '';
+        $this->join = '';
         $this->field = '*';
+        $this->order = '';
+        $this->group = '';
+        $this->limit = '';
         $this->pdoStatement = null;
         $this->bindValue = [];
         $this->bindMap = [];
@@ -197,7 +225,6 @@ class SQLDb extends Db implements DbOperInterface {
                     $key = $this->internalBind($field, $value);
                     $this->logicOperator = $logicOperator;
                     $this->internalWhere("`$field` $operator :" . $key);
-                    $this->bindValue($key, $value);
                     break;
                 default:
                     throw new WhereParameterException('Number of parameters not allowed');
@@ -228,7 +255,7 @@ class SQLDb extends Db implements DbOperInterface {
      */
     protected function internalBind(string $key, string $value): string {
         $this->bindMap[$key] = md5($key . $value);
-        $this->bindValue(':' . $this->bindMap[$key], $value);
+        $this->bindValue($this->bindMap[$key], $value);
         return $this->bindMap[$key];
     }
 
@@ -255,12 +282,46 @@ class SQLDb extends Db implements DbOperInterface {
     public function select() {
         // TODO: Implement select() method.
         //查询,先拼接语句
-        $this->sql = 'select ' . $this->field . ' from ' . $this->table . ' where ' . $this->where;
+        $this->sql = 'select ' . $this->field . ' from ' . $this->table . ' ' . $this->join . 'where' .
+            $this->where . $this->group . $this->order . $this->limit;
+        echo $this->sql;
         //预处理语句
         if ($pdoStatement = $this->prepare($this->sql)) {
             return new RecordCollection($pdoStatement);
         }
         return false;
+    }
+
+    public function join($tables, $alias = '', $on = '', $type = 'inner'): Db {
+        if (is_array($tables)) {
+            //数组,$key=>$value
+            foreach ($tables as $key => $value) {
+                if (is_numeric($key)) {
+                    //key为数字,判断$value是不是数组,不是数组封装成数组的形式
+                    //递归调用本方法
+                    if (is_array($value)) {
+                        $value = [$value];
+                    }
+                } else {
+                    //如果key是字符串,则将value封装成两个成员的数组,然后递归
+                    $value = [$key, $value];
+                }
+                call_user_func_array([$this, 'join'], $value);
+            }
+        } else {
+            switch (func_num_args()) {
+                case 1:
+                case 2:
+                    $tables = str_replace(':', $this->prefix, $tables);
+                    $this->join .= $type . ' join `' . $tables . '`';
+                    if (!empty($alias)) {
+                        $this->join .= ' as ' . $alias;
+                    }
+                    $this->join .= ' ';
+                    break;
+            }
+        }
+        return $this;
     }
 
     /**
@@ -315,7 +376,7 @@ class SQLDb extends Db implements DbOperInterface {
      * @param array $values
      * @return RecordCollection
      */
-    public function again(array $values): RecordCollection {
+    public function again(array $values = []): RecordCollection {
         //遍历映射绑定的值
         foreach ($this->bindMap as $key => $value) {
             //如果这个值存在于映射中,那么判断是否在values中存在
@@ -326,7 +387,7 @@ class SQLDb extends Db implements DbOperInterface {
                     unset($values[$key]);
                 } else {
                     //不存在则设置为原来的值
-                    $values[$this->bindMap[$key]] = $this->bindValue[':' . $this->bindMap[$key]];
+                    $values[$this->bindMap[$key]] = $this->bindValue[$this->bindMap[$key]];
                 }
             }
         }
