@@ -114,21 +114,51 @@ class SQLDb extends Db implements DbOperInterface {
         if (is_array($tables)) {
             //数组则遍历数组,如果key不为数字,则为有别名的表
             foreach ($tables as $key => $value) {
-                $this->table .= '`' . $this->prefix . $value . '`';
-                if (is_string($key)) {
-                    //无别名的表,加上前缀
-                    $this->table .= ' as ' . $key;
+                if (is_numeric($key)) {
+                    //数字,没有别名
+                    $this->table .= '`' . $this->dealTable($value) . '`';
+                } else {
+                    //不是数字,有别名的表,自动加上前缀
+                    $this->table .= '`' . $this->prefix . $key . '` as ' . $value;
                 }
                 $this->table .= ',';
             }
             //对table字符串处理一下,去掉最后面的逗号,
-            $this->table = substr($this->table, 0, strlen($this->table) - 1);
+            $this->dealGarbage($this->table, 1);
         } else {
             //字符串直接设置,对tables处理一下,将:替换成表前缀
-            $this->table = str_replace(':', $this->prefix, $tables) .
+            $this->table = $this->dealTable($tables) .
                 (empty($alias) ? '' : " as $alias");
         }
         return $this;
+    }
+
+    /**
+     * 处理表
+     * @param string $table
+     * @return string
+     */
+    protected function dealTable(string &$table): string {
+        return $table = str_replace(':', $this->prefix, $table);
+    }
+
+    /**
+     * 处理字段
+     * @param string $field
+     * @return string
+     */
+    protected function dealField(string &$field): string {
+        return $field = str_replace('.', '`.`', $field);
+    }
+
+    /**
+     * 处理垃圾
+     * @param string $string
+     * @param int $len
+     * @return string
+     */
+    protected function dealGarbage(string &$string, int $len): string {
+        return $string = substr($string, 0, strlen($string) - $len);
     }
 
     /**
@@ -145,7 +175,7 @@ class SQLDb extends Db implements DbOperInterface {
                 }
                 $this->field .= ',';
             }
-            $this->field = substr($this->field, 0, strlen($this->field) - 1);
+            $this->dealGarbage($this->field, 1);
         } else {
             $this->field = $fields;
         }
@@ -312,7 +342,7 @@ class SQLDb extends Db implements DbOperInterface {
             switch (func_num_args()) {
                 case 1:
                 case 2:
-                    $tables = str_replace(':', $this->prefix, $tables);
+                    $this->dealTable($tables);
                     $this->join .= $type . ' join `' . $tables . '`';
                     if (!empty($alias)) {
                         $this->join .= ' as ' . $alias;
@@ -331,8 +361,6 @@ class SQLDb extends Db implements DbOperInterface {
      */
     public function insert($data): int {
         // TODO: Implement insert() method.
-        //20180117好热,写得好混乱.._:(´_`」 ∠):_ ...
-
         //对sql语句拼接操作
         $this->sql = 'insert into ' . $this->table . ' (';
         $end = 'values(';
@@ -342,10 +370,11 @@ class SQLDb extends Db implements DbOperInterface {
             $end .= ':' . $key . ',';
         }
         //处理最后一个逗号
-        $this->sql = substr($this->sql, 0, strlen($this->sql) - 1);
-        $end = substr($end, 0, strlen($end) - 1);
+        $this->dealGarbage($this->sql, 1);
+        $this->dealGarbage($end, 1);
         $end .= ')';
         $this->sql .= ') ' . $end;
+        //执行sql语句
         if ($pdoStatement = $this->prepare($this->sql)) {
             return $pdoStatement->rowCount();
         }
@@ -396,6 +425,35 @@ class SQLDb extends Db implements DbOperInterface {
             return new RecordCollection($this->pdoStatement);
         }
         return false;
+    }
+
+    /**
+     * 排序
+     * @param $fields
+     * @param string $mode
+     * @return $this
+     */
+    public function order($fields, string $mode = 'desc'): Db {
+        $this->order = 'order by ';
+        //判断字段是否为数组
+        if (is_array($fields)) {
+            //遍历数组
+            foreach ($fields as $key => $value) {
+                //通过判断key来判断这一项是否为key=>value的形式
+                if (is_numeric($key)) {
+                    //如果key是数字,则直接加入
+                    $this->order .= $this->dealField($value) . ',';
+                } else {
+                    $this->order .= $this->dealField($key) . ' ' . $value . ',';
+                }
+                $this->dealGarbage($this->order, 1);
+            }
+        } else {
+            //如果是字符串,直接接入
+            $this->order .= $this->dealField($fields) . (empty($mode) ? '' : ' ' . $mode);
+        }
+        $this->order .= ' ';
+        return $this;
     }
 
     public function find() {
