@@ -328,6 +328,14 @@ class SQLDb extends Db implements DbOperInterface {
         return false;
     }
 
+    /**
+     * 链接表
+     * @param $tables
+     * @param string $alias
+     * @param string $on
+     * @param string $type
+     * @return $this
+     */
     public function join($tables, $alias = '', $on = '', $type = 'inner'): Db {
         //不能重载,只能用这些麻烦的方法来实现类似重载的效果了
         if (is_array($tables)) {
@@ -357,8 +365,36 @@ class SQLDb extends Db implements DbOperInterface {
                 $alias = '';
             }
             $this->join .= $type . ' join `' . $this->dealTable($tables) . '`' .
-                (empty($alias) ? '' : ' as ' . $alias) . ' on ' . $on . ' ';
+                (empty($alias) ? '' : ' as ' . $alias) . ' on ';
+            //处理on
+            if (is_array($on)) {
+                foreach ($on as $key => $value) {
+                    if (is_numeric($key)) {
+                        $value = $this->internalBind($key, $value);
+                        $this->join .= '`' . $this->dealField($key) . '` = :' . $value;
+                    } else {
+                        $this->join .= $value;
+                    }
+                    $this->join .= ' and ';
+                }
+                $this->dealGarbage($this->join, 5);
+            } else {
+                //字符串直接连接
+                $this->join .= $on;
+            }
+            $this->join .= ' ';
         }
+        return $this;
+    }
+
+    /**
+     * 分组
+     * @param $fields
+     * @return $this
+     */
+    public function group(string $fields): Db {
+        //用到的地方很少,直接的只处理列
+        $this->group = 'group by ' . $this->dealField($fields) . ' ';
         return $this;
     }
 
@@ -406,7 +442,6 @@ class SQLDb extends Db implements DbOperInterface {
         }
         return false;
     }
-
 
     /**
      * 再执行一次上一次的操作
@@ -465,6 +500,11 @@ class SQLDb extends Db implements DbOperInterface {
         return $this;
     }
 
+
+    /**
+     * 查询一条记录,直接返回数据
+     * @return mixed
+     */
     public function find() {
         // TODO: Implement find() method.
         $tmp_limit = $this->limit;
@@ -474,8 +514,28 @@ class SQLDb extends Db implements DbOperInterface {
         return $tmpPDOStatement->read();
     }
 
+    /**
+     *
+     * @param int $start
+     * @param int $length
+     * @return $this
+     */
+    public function limit(int $start, int $length = 0): Db {
+        $this->limit = 'limit ' . $start . (empty($length) ? '' : ',' . $length) . ' ';
+        return $this;
+    }
+
+    /**
+     * 删除符合条件的
+     * @return int
+     */
     public function delete(): int {
         // TODO: Implement delete() method.
+        $this->sql = 'delete from ' . $this->table . ' where ' . $this->where;
+        if ($this->pdoStatement = $this->prepare($this->sql)) {
+            return $this->pdoStatement->rowCount();
+        }
+        return false;
     }
 
     public function update($data): int {
