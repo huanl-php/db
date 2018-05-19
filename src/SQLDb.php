@@ -33,7 +33,7 @@ class SQLDb extends Db implements DbOperInterface {
      * 输出字段
      * @var string
      */
-    protected $field = '*';
+    protected $field = '';
 
     /**
      * 联合查询
@@ -162,22 +162,27 @@ class SQLDb extends Db implements DbOperInterface {
     }
 
     /**
-     * 字段
+     * 设置返回的字段
+     * @param $fields
+     * @param string $alias
      * @return $this
      */
-    public function field($fields): Db {
+    public function field($fields, string $alias = ''): Db {
         //逻辑和表差不多
         if (is_array($fields)) {
             foreach ($fields as $key => $value) {
-                $this->field .= '`' . $value . '`';
-                if (is_string($key)) {
-                    $this->field .= ' as ' . $key;
+                if (is_numeric($key)) {
+                    //如果是数字,就是没有别名的字段
+                    $this->field .= '`' . $this->dealField($value) . '`';
+                } else {
+                    //key对value的形式
+                    $this->field .= '`' . $this->dealField($key) . '` as ' . $value;
                 }
                 $this->field .= ',';
             }
             $this->dealGarbage($this->field, 1);
         } else {
-            $this->field = $fields;
+            $this->field = $this->dealField($fields);
         }
         return $this;
     }
@@ -190,7 +195,7 @@ class SQLDb extends Db implements DbOperInterface {
         $this->logicOperator = '';
         $this->sql = '';
         $this->join = '';
-        $this->field = '*';
+        $this->field = '';
         $this->order = '';
         $this->group = '';
         $this->limit = '';
@@ -312,8 +317,9 @@ class SQLDb extends Db implements DbOperInterface {
     public function select() {
         // TODO: Implement select() method.
         //查询,先拼接语句
-        $this->sql = 'select ' . $this->field . ' from ' . $this->table . ' ' . $this->join . 'where' .
-            $this->where . $this->group . $this->order . $this->limit;
+        $this->sql = 'select ' . (empty($this->field) ? '*' : $this->field) . ' from ' . $this->table .
+            ' ' . $this->join . 'where' . $this->where . $this->group .
+            $this->order . $this->limit;
         echo $this->sql;
         //预处理语句
         if ($pdoStatement = $this->prepare($this->sql)) {
@@ -323,6 +329,7 @@ class SQLDb extends Db implements DbOperInterface {
     }
 
     public function join($tables, $alias = '', $on = '', $type = 'inner'): Db {
+        //不能重载,只能用这些麻烦的方法来实现类似重载的效果了
         if (is_array($tables)) {
             //数组,$key=>$value
             foreach ($tables as $key => $value) {
@@ -333,23 +340,24 @@ class SQLDb extends Db implements DbOperInterface {
                         $value = [$value];
                     }
                 } else {
-                    //如果key是字符串,则将value封装成两个成员的数组,然后递归
-                    $value = [$key, $value];
+                    //如果key是字符串,再判断值是否为数组
+                    //如果value是数组,则将key设置为第一个参数,往后推
+                    if (is_array($value)) {
+                        array_unshift($value, $key);
+                    } else {
+                        $value = [$key, $value];
+                    }
                 }
                 call_user_func_array([$this, 'join'], $value);
             }
         } else {
-            switch (func_num_args()) {
-                case 1:
-                case 2:
-                    $this->dealTable($tables);
-                    $this->join .= $type . ' join `' . $tables . '`';
-                    if (!empty($alias)) {
-                        $this->join .= ' as ' . $alias;
-                    }
-                    $this->join .= ' ';
-                    break;
+            if (func_num_args() == 2) {
+                //两个参数的情况下,$alias参数为on
+                $on = $alias;
+                $alias = '';
             }
+            $this->join .= $type . ' join `' . $this->dealTable($tables) . '`' .
+                (empty($alias) ? '' : ' as ' . $alias) . ' on ' . $on . ' ';
         }
         return $this;
     }
@@ -442,12 +450,13 @@ class SQLDb extends Db implements DbOperInterface {
                 //通过判断key来判断这一项是否为key=>value的形式
                 if (is_numeric($key)) {
                     //如果key是数字,则直接加入
-                    $this->order .= $this->dealField($value) . ',';
+                    $this->order .= $this->dealField($value);
                 } else {
-                    $this->order .= $this->dealField($key) . ' ' . $value . ',';
+                    $this->order .= $this->dealField($key) . ' ' . $value;
                 }
-                $this->dealGarbage($this->order, 1);
+                $this->order .= ',';
             }
+            $this->dealGarbage($this->order, 1);
         } else {
             //如果是字符串,直接接入
             $this->order .= $this->dealField($fields) . (empty($mode) ? '' : ' ' . $mode);
@@ -458,6 +467,11 @@ class SQLDb extends Db implements DbOperInterface {
 
     public function find() {
         // TODO: Implement find() method.
+        $tmp_limit = $this->limit;
+        $this->limit = 'limit 1';
+        $tmpPDOStatement = $this->select();
+        $this->limit = $tmp_limit;
+        return $tmpPDOStatement->read();
     }
 
     public function delete(): int {
