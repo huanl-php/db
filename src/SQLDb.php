@@ -137,6 +137,16 @@ class SQLDb extends Db implements DbOperInterface {
      * @return string
      */
     protected function dealTable(string &$table): string {
+        //一个冒号替换为表前缀,两个冒号则当做没有表前缀处理
+        if ($table[0] == ':') {
+            if ($table[1] == ':') {
+                //两个冒号
+                $table = substr($table, 2);
+            }
+        } else {
+            //没有冒号
+            $table = $this->prefix . $table;
+        }
         return $table = str_replace(':', $this->prefix, $table);
     }
 

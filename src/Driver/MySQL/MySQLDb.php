@@ -3,8 +3,8 @@
 
 namespace HuanL\Db\Driver\MySQL;
 
-use HuanL\Db\DbSQL;
+use HuanL\Db\SQLDb;
 
-class MySQLDb extends DbSQL {
+class MySQLDb extends SQLDb {
 
 }
