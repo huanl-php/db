@@ -4,10 +4,10 @@
 namespace HuanL\Db;
 
 /**
- * 使用SQL语句的数据库
+ * Class SQLDb
  * @package HuanL\Db
  */
-class SQLDb extends Db implements DbOperInterface {
+class SQLDb extends Db {
 
     /**
      * sql语句
@@ -125,7 +125,7 @@ class SQLDb extends Db implements DbOperInterface {
             $this->dealGarbage($this->table, 1);
         } else {
             //字符串直接设置,对tables处理一下,将:替换成表前缀
-            $this->table = $this->dealTable($tables) .
+            $this->table = '`' . $this->dealTable($tables) . '`' .
                 (empty($alias) ? '' : " as $alias");
         }
         return $this;

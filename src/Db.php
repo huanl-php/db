@@ -7,7 +7,7 @@ namespace HuanL\Db;
  * Class Db
  * @package HuanL\Db
  */
-abstract class Db {
+abstract class Db implements DbOperInterface {
 
     /**
      * 连接对象
