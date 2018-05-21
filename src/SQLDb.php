@@ -3,8 +3,6 @@
 
 namespace HuanL\Db;
 
-use HuanL\Db\Driver\MySQL\MySQLDBConnect;
-
 /**
  * 使用SQL语句的数据库
  * @package HuanL\Db
@@ -289,7 +287,7 @@ class SQLDb extends Db implements DbOperInterface {
      * @param $str
      */
     protected function internalBind(string $key, string $value): string {
-        $this->bindMap[$key] = md5($key . $value);
+        $this->bindMap[$key] = 'internalBindValue_' . sizeof($this->bindValue);
         $this->bindValue($this->bindMap[$key], $value);
         return $this->bindMap[$key];
     }
@@ -320,7 +318,6 @@ class SQLDb extends Db implements DbOperInterface {
         $this->sql = 'select ' . (empty($this->field) ? '*' : $this->field) . ' from ' . $this->table .
             ' ' . $this->join . 'where' . $this->where . $this->group .
             $this->order . $this->limit;
-        echo $this->sql;
         //预处理语句
         if ($pdoStatement = $this->prepare($this->sql)) {
             return new RecordCollection($pdoStatement);
@@ -406,18 +403,47 @@ class SQLDb extends Db implements DbOperInterface {
     public function insert($data): int {
         // TODO: Implement insert() method.
         //对sql语句拼接操作
-        $this->sql = 'insert into ' . $this->table . ' (';
-        $end = 'values(';
-        foreach ($data as $key => $value) {
-            $this->sql .= '`' . $key . '`,';
-            $key = $this->internalBind($key, $value);
-            $end .= ':' . $key . ',';
+        $this->sql = 'insert into ' . $this->table;
+        $end = ' values';
+        if (empty($this->field)) {
+            //如果列名是空的,那么就认为data中的key为列名
+            //判断有没有key(key为字符串),没有的话就不加列名的参数
+            $mode = 0;
+            if (is_string(key($data))) {
+                $mode = 1;
+                $this->sql .= '(';
+            }
+            $end .= '(';
+            foreach ($data as $key => $value) {
+                if ($mode) {
+                    $this->sql .= '`' . $key . '`,';
+                }
+                $value = $this->internalBind($key, $value);
+                $end .= ':' . $value . ',';
+            }
+            //处理最后一个逗号
+            $this->dealGarbage($end, 1);
+            if ($mode) {
+                $this->dealGarbage($this->sql, 1);
+                $this->sql .= ') ';
+            }
+            $end .= ')';
+        } else {
+            //列名不为空,那么不对key进行识别,直接按照多条记录处理
+            //对于不正确的抛出异常
+            $this->sql .= '(' . $this->field . ') ';
+            foreach ($data as $key => $item) {
+                $end .= '(';
+                foreach ($item as $value) {
+                    $value = $this->internalBind($key, $value);
+                    $end .= ':' . $value . ',';
+                }
+                $this->dealGarbage($end, 1);
+                $end .= '),';
+            }
+            $this->dealGarbage($end, 1);
         }
-        //处理最后一个逗号
-        $this->dealGarbage($this->sql, 1);
-        $this->dealGarbage($end, 1);
-        $end .= ')';
-        $this->sql .= ') ' . $end;
+        $this->sql .= $end;
         //执行sql语句
         if ($pdoStatement = $this->prepare($this->sql)) {
             return $pdoStatement->rowCount();
