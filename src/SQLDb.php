@@ -500,7 +500,6 @@ class SQLDb extends Db implements DbOperInterface {
         return $this;
     }
 
-
     /**
      * 查询一条记录,直接返回数据
      * @return mixed
@@ -531,15 +530,55 @@ class SQLDb extends Db implements DbOperInterface {
      */
     public function delete(): int {
         // TODO: Implement delete() method.
-        $this->sql = 'delete from ' . $this->table . ' where ' . $this->where;
+        $this->sql = 'delete from ' . $this->table . ' where ' . $this->where . $this->limit;
         if ($this->pdoStatement = $this->prepare($this->sql)) {
             return $this->pdoStatement->rowCount();
         }
         return false;
     }
 
+    /**
+     * 更新符合条件的记录
+     * @param $data
+     * @return int
+     */
     public function update($data): int {
         // TODO: Implement update() method.
+        $this->sql = 'update `' . $this->dealTable($this->table) . '` set ';
+        //先遍历更新的值,加入绑定的value中
+        foreach ($data as $key => $value) {
+            $value = $this->internalBind($key, $value);
+            $this->sql .= '`' . $this->dealField($key) . '` = :' . $value . ',';
+        }
+        $this->dealGarbage($this->sql, 1);
+        $this->sql .= ' where ' . $this->where . $this->limit;
+        if ($this->pdoStatement = $this->prepare($this->sql)) {
+            return $this->pdoStatement->rowCount();
+        }
+        return false;
+    }
+
+    /**
+     * 直接执行一条sql语句,返回记录集
+     * @param $sql
+     * @return bool|RecordCollection
+     */
+    public function query($sql) {
+        $this->sql = $sql;
+        if ($pdoStatement = $this->dbConnect->query()) {
+            return new RecordCollection($this->pdoStatement = $pdoStatement);
+        }
+        return false;
+    }
+
+    /**
+     * 执行一条sql语句,返回变化条数
+     * @param $sql
+     * @return int
+     */
+    public function exec($sql): int {
+        $this->sql = $sql;
+        return $this->dbConnect->exec($sql);
     }
 
     /**
