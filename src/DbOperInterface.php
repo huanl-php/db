@@ -35,6 +35,23 @@ interface DbOperInterface {
     public function order($fields, string $mode = 'desc'): DbOperInterface;
 
     /**
+     * 链接表
+     * @param $tables
+     * @param string $alias
+     * @param string $on
+     * @param string $type
+     * @return $this
+     */
+    public function join($tables, $alias = '', $on = '', $type = 'inner'): DbOperInterface;
+
+    /**
+     * 分组
+     * @param string $fields
+     * @return DbOperInterface
+     */
+    public function group(string $fields): DbOperInterface;
+
+    /**
      * 分页
      * @param int $start
      * @param int $length
@@ -112,6 +129,6 @@ interface DbOperInterface {
      * 执行,返回变化条数
      * @return int
      */
-    public function exce($action): int;
+    public function exec($action): int;
 
 }
