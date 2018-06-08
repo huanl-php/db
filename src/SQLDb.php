@@ -601,7 +601,7 @@ class SQLDb extends Db {
      */
     public function query($sql): RecordCollection {
         $this->sql = $sql;
-        if ($pdoStatement = $this->dbConnect->query()) {
+        if ($pdoStatement = $this->dbConnect->query($sql)) {
             return new RecordCollection($this->pdoStatement = $pdoStatement);
         }
         return null;

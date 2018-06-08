@@ -9,6 +9,7 @@ use PDO;
  * Class DbConnect
  * @method int errorCode()
  * @method array errorInfo()
+ * @method PDOStatement|bool query ($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array())
  * @package HuanL\Db
  */
 class DbConnect {
@@ -90,18 +91,6 @@ class DbConnect {
      */
     public function exec($statement): int {
         return $this->pdo->exec($statement);
-    }
-
-    /**
-     * 执行一条SQL语句，返回一个结果集作对象
-     * @param $statement
-     * @param int $mode
-     * @param null $arg3
-     * @param array $ctorargs
-     * @return bool|\PDOStatement
-     */
-    public function query($statement, int $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array()) {
-        return $this->pdo->query($statement, $mode, $arg3, $ctorargs);
     }
 
     /**
