@@ -320,9 +320,9 @@ class SQLDb extends Db {
 
     /**
      * 搜索符合条件的记录,返回记录集
-     * @return bool|RecordCollection
+     * @return RecordCollection
      */
-    public function select() {
+    public function select(): RecordCollection {
         // TODO: Implement select() method.
         //查询,先拼接语句
         $this->sql = 'select ' . (empty($this->field) ? '*' : $this->field) . ' from ' . $this->table .
@@ -332,7 +332,7 @@ class SQLDb extends Db {
         if ($pdoStatement = $this->prepare($this->sql)) {
             return new RecordCollection($pdoStatement);
         }
-        return false;
+        return null;
     }
 
     /**
@@ -503,7 +503,7 @@ class SQLDb extends Db {
         if ($this->pdoStatement->execute($values)) {
             return new RecordCollection($this->pdoStatement);
         }
-        return false;
+        return null;
     }
 
     /**

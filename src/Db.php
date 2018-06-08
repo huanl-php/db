@@ -19,4 +19,11 @@ abstract class Db implements DbOperInterface {
         $this->dbConnect = $dbConnect;
     }
 
+    /**
+     * 上一次插入的id
+     * @return int
+     */
+    public function lastId(){
+        return $this->dbConnect->lastId();
+    }
 }

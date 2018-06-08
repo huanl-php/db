@@ -11,6 +11,45 @@ namespace HuanL\Db;
 interface DbOperInterface {
 
     /**
+     * 绑定值
+     * @param $key
+     * @param $value
+     * @return DbOperInterface
+     */
+    public function bindValue($key, $value): DbOperInterface;
+
+    /**
+     * 返回字段
+     * @param $fields
+     * @param string $alias
+     * @return Db
+     */
+    public function field($fields, string $alias = ''): DbOperInterface;
+
+    /**
+     * 排序
+     * @param $fields
+     * @param string $mode
+     * @return Db
+     */
+    public function order($fields, string $mode = 'desc'): DbOperInterface;
+
+    /**
+     * 分页
+     * @param int $start
+     * @param int $length
+     * @return Db
+     */
+    public function limit(int $start, int $length = 0): DbOperInterface;
+
+    /**
+     * 在执行一次上次操作
+     * @param array $values
+     * @return RecordCollection
+     */
+    public function again(array $values = []): RecordCollection;
+
+    /**
      * 条件
      * @param $field
      * @param $operator
@@ -63,5 +102,16 @@ interface DbOperInterface {
      */
     public function delete(): int;
 
+    /**
+     * 执行返回记录集
+     * @return RecordCollection
+     */
+    public function query($action): RecordCollection;
+
+    /**
+     * 执行,返回变化条数
+     * @return int
+     */
+    public function exce($action): int;
 
 }
