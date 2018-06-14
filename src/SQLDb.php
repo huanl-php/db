@@ -82,6 +82,12 @@ class SQLDb extends Db {
     protected $bindValue = [];
 
     /**
+     * 绑定的参数
+     * @var array
+     */
+    protected $bindParam = [];
+
+    /**
      * 映射到绑定的值
      * @var array
      */
@@ -209,6 +215,7 @@ class SQLDb extends Db {
         $this->limit = '';
         $this->pdoStatement = null;
         $this->bindValue = [];
+        $this->bindParam = [];
         $this->bindMap = [];
         $this->brackets_stack = [];
     }
@@ -257,7 +264,13 @@ class SQLDb extends Db {
                     $this->internalWhere($field);
                     break;
                 case 2:
-                    $this->where($field, '=', $operator, $this->logicOperator);
+                    //两个参数,判断$operator是否为数组,绑定到参数
+                    if (is_array($operator)) {
+                        $this->dealSqlBindValue($field, $operator);
+                        $this->where($field);
+                    } else {
+                        $this->where($field, '=', $operator, $this->logicOperator);
+                    }
                     break;
                 case 3:
                     //三个参数,以记录中的逻辑运算符为准
@@ -279,6 +292,14 @@ class SQLDb extends Db {
             $this->internalWhere(')');
         }
         return $this;
+    }
+
+    /**
+     * 处理sql,绑定值
+     * @param $bindValue
+     */
+    protected function dealSqlBindValue($sql, $bindValue) {
+        $this->bindValue = array_merge($this->bindValue, $bindValue);
     }
 
     /**
@@ -332,7 +353,7 @@ class SQLDb extends Db {
         if ($pdoStatement = $this->prepare($this->sql)) {
             return new RecordCollection($pdoStatement);
         }
-        return false;
+        return null;
     }
 
     /**
@@ -472,9 +493,18 @@ class SQLDb extends Db {
             //失败直接返回false
             return false;
         }
-        //执行sql语句
-        if ($pdoStatement->execute($this->bindValue)) {
-            return $this->pdoStatement = $pdoStatement;
+        //两者冲突
+        if (count($this->bindParam)) {
+            foreach ($this->bindParam as $key => $value) {
+                $pdoStatement->bindParam($key, $this->bindParam[$key]);
+            }
+            if ($pdoStatement->execute()) {
+                return $this->pdoStatement = $pdoStatement;
+            }
+        } else {
+            if ($pdoStatement->execute($this->bindValue)) {
+                return $this->pdoStatement = $pdoStatement;
+            }
         }
         return false;
     }
@@ -624,7 +654,22 @@ class SQLDb extends Db {
      * @return $this
      */
     public function bindValue($key, $value): Db {
-        $this->bindValue[$key] = $value;
+        if (func_num_args() == 1) {
+            $this->bindValue[] = $key;
+        } else {
+            $this->bindValue[$key] = $value;
+        }
+        return $this;
+    }
+
+    /**
+     * 绑定变量
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function bindParam($key, &$value): Db {
+        $this->bindParam[$key] = $value;
         return $this;
     }
 
