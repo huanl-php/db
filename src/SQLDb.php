@@ -111,7 +111,7 @@ class SQLDb extends Db {
      * @param $tables
      * @return $this
      */
-    public function table($tables, string $alias = ''): Db {
+    public function table($tables, string $alias = ''): DbOperInterface {
         //设置要操作的表,使用试初始化其他参数的值
         $this->initParamValue();
         //对传入的参数做处理,分为数组和字符串
@@ -181,7 +181,7 @@ class SQLDb extends Db {
      * @param string $alias
      * @return $this
      */
-    public function field($fields, string $alias = ''): Db {
+    public function field($fields, string $alias = ''): DbOperInterface {
         //逻辑和表差不多
         if (is_array($fields)) {
             foreach ($fields as $key => $value) {
@@ -341,9 +341,9 @@ class SQLDb extends Db {
 
     /**
      * 搜索符合条件的记录,返回记录集
-     * @return bool|RecordCollection
+     * @return RecordCollection
      */
-    public function select() {
+    public function select(): RecordCollection {
         // TODO: Implement select() method.
         //查询,先拼接语句
         $this->sql = 'select ' . (empty($this->field) ? '*' : $this->field) . ' from ' . $this->table .
@@ -364,7 +364,7 @@ class SQLDb extends Db {
      * @param string $type
      * @return $this
      */
-    public function join($tables, $alias = '', $on = '', $type = 'inner'): Db {
+    public function join($tables, $alias = '', $on = '', $type = 'inner'): DbOperInterface {
         //不能重载,只能用这些麻烦的方法来实现类似重载的效果了
         if (is_array($tables)) {
             //数组,$key=>$value
@@ -420,7 +420,7 @@ class SQLDb extends Db {
      * @param $fields
      * @return $this
      */
-    public function group(string $fields): Db {
+    public function group(string $fields): DbOperInterface {
         //用到的地方很少,直接的只处理列
         $this->group = 'group by ' . $this->dealField($fields) . ' ';
         return $this;
@@ -533,7 +533,7 @@ class SQLDb extends Db {
         if ($this->pdoStatement->execute($values)) {
             return new RecordCollection($this->pdoStatement);
         }
-        return false;
+        return null;
     }
 
     /**
@@ -542,7 +542,7 @@ class SQLDb extends Db {
      * @param string $mode
      * @return $this
      */
-    public function order($fields, string $mode = 'desc'): Db {
+    public function order($fields, string $mode = 'desc'): DbOperInterface {
         $this->order = 'order by ';
         //判断字段是否为数组
         if (is_array($fields)) {
@@ -585,7 +585,7 @@ class SQLDb extends Db {
      * @param int $length
      * @return $this
      */
-    public function limit(int $start, int $length = 0): Db {
+    public function limit(int $start, int $length = 0): DbOperInterface {
         $this->limit = 'limit ' . $start . (empty($length) ? '' : ',' . $length) . ' ';
         return $this;
     }
@@ -627,14 +627,14 @@ class SQLDb extends Db {
     /**
      * 直接执行一条sql语句,返回记录集
      * @param $sql
-     * @return bool|RecordCollection
+     * @return RecordCollection
      */
-    public function query($sql) {
+    public function query($sql): RecordCollection {
         $this->sql = $sql;
-        if ($pdoStatement = $this->dbConnect->query()) {
+        if ($pdoStatement = $this->dbConnect->query($sql)) {
             return new RecordCollection($this->pdoStatement = $pdoStatement);
         }
-        return false;
+        return null;
     }
 
     /**
