@@ -30,7 +30,7 @@ interface DbOperInterface {
      * 返回字段
      * @param $fields
      * @param string $alias
-     * @return Db
+     * @return DbOperInterface
      */
     public function field($fields, string $alias = ''): DbOperInterface;
 
@@ -38,7 +38,7 @@ interface DbOperInterface {
      * 排序
      * @param $fields
      * @param string $mode
-     * @return Db
+     * @return DbOperInterface
      */
     public function order($fields, string $mode = 'desc'): DbOperInterface;
 
@@ -63,7 +63,7 @@ interface DbOperInterface {
      * 分页
      * @param int $start
      * @param int $length
-     * @return Db
+     * @return DbOperInterface
      */
     public function limit(int $start, int $length = 0): DbOperInterface;
 
@@ -79,19 +79,19 @@ interface DbOperInterface {
      * @param $field
      * @param $operator
      * @param $value
-     * @return Db
+     * @return DbOperInterface
      */
     public function where($field, $operator, $value): DbOperInterface;
 
     /**
      * or运算符
-     * @return Db
+     * @return DbOperInterface
      */
     public function _or(): DbOperInterface;
 
     /**
      * and运算符
-     * @return Db
+     * @return DbOperInterface
      */
     public function _and(): DbOperInterface;
 
