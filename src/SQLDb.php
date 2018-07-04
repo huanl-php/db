@@ -570,7 +570,7 @@ class SQLDb extends Db {
 
     /**
      * 查询一条记录,直接返回数据
-     * @return mixed
+     * @return array|bool
      */
     public function find() {
         // TODO: Implement find() method.

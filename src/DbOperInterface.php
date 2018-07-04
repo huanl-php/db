@@ -111,13 +111,13 @@ interface DbOperInterface {
 
     /**
      * 读取出符合条件的所有数据
-     * @return mixed
+     * @return RecordCollection
      */
-    public function select();
+    public function select(): RecordCollection;
 
     /**
      * 读取出符合条件的第一条数据
-     * @return mixed
+     * @return array|bool
      */
     public function find();
 
