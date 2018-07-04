@@ -11,6 +11,14 @@ namespace HuanL\Db;
 interface DbOperInterface {
 
     /**
+     * 设置表
+     * @param $tables
+     * @param string $alias
+     * @return DbOperInterface
+     */
+    public function table($tables, string $alias = ''): DbOperInterface;
+
+    /**
      * 绑定值
      * @param $key
      * @param $value

@@ -148,12 +148,14 @@ class SQLDb extends Db {
             if ($table[1] == ':') {
                 //两个冒号
                 $table = substr($table, 2);
+            } else {
+                $table = $this->prefix . substr($table, 1);
             }
         } else {
             //没有冒号
             $table = $this->prefix . $table;
         }
-        return $table = str_replace(':', $this->prefix, $table);
+        return $table;
     }
 
     /**
