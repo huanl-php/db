@@ -81,7 +81,7 @@ interface DbOperInterface {
      * @param $value
      * @return DbOperInterface
      */
-    public function where($field, $operator, $value): DbOperInterface;
+    public function where($field, $operator = '=', $value = '', $logicOperator = 'and'): DbOperInterface;
 
     /**
      * or运算符
