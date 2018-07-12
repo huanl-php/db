@@ -655,7 +655,7 @@ class SQLDb extends Db {
      * @param $value
      * @return $this
      */
-    public function bindValue($key, $value): Db {
+    public function bindValue($key, $value): DbOperInterface {
         if (func_num_args() == 1) {
             $this->bindValue[] = $key;
         } else {
@@ -670,7 +670,7 @@ class SQLDb extends Db {
      * @param $value
      * @return $this
      */
-    public function bindParam($key, &$value): Db {
+    public function bindParam($key, &$value): DbOperInterface {
         $this->bindParam[$key] = $value;
         return $this;
     }
