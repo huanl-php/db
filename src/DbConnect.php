@@ -61,7 +61,7 @@ class DbConnect {
     }
 
     /**
-     * 开始一个事务
+     * 开始事务
      * @return bool
      */
     public function begin(): bool {
@@ -69,7 +69,7 @@ class DbConnect {
     }
 
     /**
-     * 开始一个事务
+     * 提交事务
      * @return bool
      */
     public function commit(): bool {

@@ -485,6 +485,18 @@ class SQLDb extends Db {
     }
 
     /**
+     * 符合条件的数量
+     * @return int
+     */
+    public function count(): int {
+        $tmp_field = $this->field;
+        $this->field('count(*)');
+        $count = $this->find();
+        $this->field = $tmp_field;
+        return $count['count(*)'];
+    }
+
+    /**
      * 执行预处理语句,返回PDOStatement
      * @param $sql
      * @return bool|\PDOStatement
@@ -612,7 +624,7 @@ class SQLDb extends Db {
      */
     public function update($data): int {
         // TODO: Implement update() method.
-        $this->sql = 'update `' . $this->dealTable($this->table) . '` set ';
+        $this->sql = 'update ' . $this->table . ' set ';
         //先遍历更新的值,加入绑定的value中
         foreach ($data as $key => $value) {
             $value = $this->internalBind($key, $value);

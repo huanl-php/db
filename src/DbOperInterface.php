@@ -11,6 +11,12 @@ namespace HuanL\Db;
 interface DbOperInterface {
 
     /**
+     * 符合条件的数量
+     * @return int
+     */
+    public function count(): int;
+
+    /**
      * 设置表
      * @param $tables
      * @param string $alias
