@@ -19,7 +19,6 @@ use ArrayAccess;
  * @method bool errorCode()
  * @method bool errorInfo()
  * @method bool execute(array $input_parameters)
- * @method mixed fetch(int $fetch_style = PDO::FETCH_BOTH, int $cursor_orientation = PDO::FETCH_ORI_NEXT, int $cursor_offset = 0)
  * @method array fetchAll(int $fetch_style = PDO::ATTR_DEFAULT_FETCH_MODE, mixed $fetch_argument = PDO::FETCH_COLUMN, array $ctor_args = array())
  * @method string fetchColumn(int $column_number = 0)
  * @method mixed fetchObject(string $class_name = "stdClass", array $ctor_args)
@@ -56,7 +55,7 @@ class RecordCollection implements ArrayAccess {
      * @param int $cursor_offset
      * @return mixed
      */
-    public function read($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0) {
+    public function fetch($fetch_style = PDO::FETCH_ASSOC, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0) {
         return $this->row = $this->statement->fetch($fetch_style, $cursor_orientation, $cursor_offset);
     }
 
