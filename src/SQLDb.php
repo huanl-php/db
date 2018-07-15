@@ -590,7 +590,7 @@ class SQLDb extends Db {
         $this->limit = 'limit 1';
         $tmpPDOStatement = $this->select();
         $this->limit = $tmp_limit;
-        return $tmpPDOStatement->read();
+        return $tmpPDOStatement->fetch();
     }
 
     /**
