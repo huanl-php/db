@@ -349,7 +349,7 @@ class SQLDb extends Db {
         // TODO: Implement select() method.
         //查询,先拼接语句
         $this->sql = 'select ' . (empty($this->field) ? '*' : $this->field) . ' from ' . $this->table .
-            ' ' . $this->join . 'where' . $this->where . $this->group .
+            ' ' . $this->join . (empty($this->where) ? ' ' : 'where' . $this->where) . $this->group .
             $this->order . $this->limit;
         //预处理语句
         if ($pdoStatement = $this->prepare($this->sql)) {
