@@ -198,7 +198,7 @@ class SQLDb extends Db {
             }
             $this->dealGarbage($this->field, 1);
         } else {
-            $this->field = $this->dealField($fields);
+            $this->field .= (empty($this->field) ? '' : ',') . $fields;
         }
         return $this;
     }
@@ -343,9 +343,9 @@ class SQLDb extends Db {
 
     /**
      * 搜索符合条件的记录,返回记录集
-     * @return RecordCollection
+     * @return bool|RecordCollection
      */
-    public function select(): RecordCollection {
+    public function select() {
         // TODO: Implement select() method.
         //查询,先拼接语句
         $this->sql = 'select ' . (empty($this->field) ? '*' : $this->field) . ' from ' . $this->table .
@@ -355,7 +355,7 @@ class SQLDb extends Db {
         if ($pdoStatement = $this->prepare($this->sql)) {
             return new RecordCollection($pdoStatement);
         }
-        return null;
+        return false;
     }
 
     /**
@@ -643,12 +643,12 @@ class SQLDb extends Db {
      * @param $sql
      * @return RecordCollection
      */
-    public function query($sql): RecordCollection {
+    public function query($sql) {
         $this->sql = $sql;
         if ($pdoStatement = $this->dbConnect->query($sql)) {
             return new RecordCollection($this->pdoStatement = $pdoStatement);
         }
-        return null;
+        return false;
     }
 
     /**

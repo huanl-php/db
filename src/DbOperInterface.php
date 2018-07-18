@@ -117,9 +117,9 @@ interface DbOperInterface {
 
     /**
      * 读取出符合条件的所有数据
-     * @return RecordCollection
+     * @return bool|RecordCollection
      */
-    public function select(): RecordCollection;
+    public function select();
 
     /**
      * 读取出符合条件的第一条数据
@@ -135,9 +135,9 @@ interface DbOperInterface {
 
     /**
      * 执行返回记录集
-     * @return RecordCollection
+     * @return bool|RecordCollection
      */
-    public function query($action): RecordCollection;
+    public function query($action);
 
     /**
      * 执行,返回变化条数
