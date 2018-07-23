@@ -28,6 +28,24 @@ class DbConnect {
     private $dns = '';
 
     /**
+     * 数据库用户
+     * @var string
+     */
+    private $user = '';
+
+    /**
+     * 数据库密码
+     * @var string
+     */
+    private $passwd = '';
+
+    /**
+     * 数据库连接选项
+     * @var array
+     */
+    private $options = [];
+
+    /**
      * 连接数据库,初始化pdo对象
      * DbConnect constructor.
      * @param string $dbtype
@@ -42,7 +60,19 @@ class DbConnect {
         foreach ($param as $key => $value) {
             $this->dns .= $key . '=' . $value . ';';
         }
-        $this->pdo = new PDO($this->dns, $user, $passwd, $options);
+        $this->user = $user;
+        $this->passwd = $passwd;
+        $this->options = $options;
+        $this->reconnect();
+    }
+
+    /**
+     * 数据库重连
+     * @return void
+     */
+    public function reconnect() {
+        $this->pdo = null;
+        $this->pdo = new PDO($this->dns, $this->user, $this->passwd, $this->options);
     }
 
     /**
