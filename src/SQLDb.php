@@ -352,8 +352,8 @@ class SQLDb extends Db {
             ' ' . $this->join . (empty($this->where) ? ' ' : 'where' . $this->where) . $this->group .
             $this->order . $this->limit;
         //预处理语句
-        if ($pdoStatement = $this->prepare($this->sql)) {
-            return new RecordCollection($pdoStatement);
+        if ($this->pdoStatement = $this->prepare($this->sql)) {
+            return new RecordCollection($this->pdoStatement);
         }
         return false;
     }
@@ -478,8 +478,8 @@ class SQLDb extends Db {
         }
         $this->sql .= $end;
         //执行sql语句
-        if ($pdoStatement = $this->prepare($this->sql)) {
-            return $pdoStatement->rowCount();
+        if ($this->pdoStatement = $this->prepare($this->sql)) {
+            return $this->pdoStatement->rowCount();
         }
         return false;
     }
@@ -491,9 +491,12 @@ class SQLDb extends Db {
     public function count(): int {
         $tmp_field = $this->field;
         $this->field('count(*)');
-        $count = $this->find();
+        if ($count = $this->find()) {
+            $this->field = $tmp_field;
+            return $count['count(*)'];
+        }
         $this->field = $tmp_field;
-        return $count['count(*)'];
+        return 0;
     }
 
     /**
@@ -508,17 +511,23 @@ class SQLDb extends Db {
             return false;
         }
         //两者冲突
-        if (count($this->bindParam)) {
-            foreach ($this->bindParam as $key => $value) {
-                $pdoStatement->bindParam($key, $this->bindParam[$key]);
+        try {
+            if (count($this->bindParam)) {
+                foreach ($this->bindParam as $key => $value) {
+                    $pdoStatement->bindParam($key, $this->bindParam[$key]);
+                }
+
+                if ($pdoStatement->execute()) {
+                    return $this->pdoStatement = $pdoStatement;
+                }
+            } else {
+                if ($pdoStatement->execute($this->bindValue)) {
+                    return $this->pdoStatement = $pdoStatement;
+                }
             }
-            if ($pdoStatement->execute()) {
-                return $this->pdoStatement = $pdoStatement;
-            }
-        } else {
-            if ($pdoStatement->execute($this->bindValue)) {
-                return $this->pdoStatement = $pdoStatement;
-            }
+        } catch (\Throwable $exception) {
+            $this->dbConnect->reconnect();
+            return $this->prepare($sql);
         }
         return false;
     }
@@ -588,9 +597,12 @@ class SQLDb extends Db {
         // TODO: Implement find() method.
         $tmp_limit = $this->limit;
         $this->limit = 'limit 1';
-        $tmpPDOStatement = $this->select();
+        if ($tmpPDOStatement = $this->select()) {
+            $this->limit = $tmp_limit;
+            return $tmpPDOStatement->fetch();
+        }
         $this->limit = $tmp_limit;
-        return $tmpPDOStatement->fetch();
+        return false;
     }
 
     /**
