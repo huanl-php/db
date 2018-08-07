@@ -435,6 +435,20 @@ class SQLDb extends Db {
      */
     public function insert($data): int {
         // TODO: Implement insert() method.
+        $this->insert_before($data);
+        //执行sql语句
+        if ($this->pdoStatement = $this->prepare($this->sql)) {
+            return $this->pdoStatement->rowCount();
+        }
+        return false;
+    }
+
+    /**
+     * 内部使用的insert方法,处理insert
+     * 方便insert_duplicate的使用
+     * @param $data
+     */
+    private function insert_before($data) {
         //对sql语句拼接操作
         $this->sql = 'insert into ' . $this->table;
         $end = ' values';
@@ -477,6 +491,19 @@ class SQLDb extends Db {
             $this->dealGarbage($end, 1);
         }
         $this->sql .= $end;
+    }
+
+    /**
+     * 不存在插入,存在更新
+     * @param $data
+     * @return int
+     */
+    public function insert_duplicate($data): int {
+        $this->insert_before($data);
+        //对后面的进行拼接
+        $this->sql .= ' ON DUPLICATE KEY UPDATE ';
+        //update的内容
+        $this->update_date($data);
         //执行sql语句
         if ($this->pdoStatement = $this->prepare($this->sql)) {
             return $this->pdoStatement->rowCount();
@@ -637,17 +664,25 @@ class SQLDb extends Db {
     public function update($data): int {
         // TODO: Implement update() method.
         $this->sql = 'update ' . $this->table . ' set ';
-        //先遍历更新的值,加入绑定的value中
-        foreach ($data as $key => $value) {
-            $value = $this->internalBind($key, $value);
-            $this->sql .= '`' . $this->dealField($key) . '` = :' . $value . ',';
-        }
-        $this->dealGarbage($this->sql, 1);
+        $this->update_date($data);
         $this->sql .= ' where ' . $this->where . $this->limit;
         if ($this->pdoStatement = $this->prepare($this->sql)) {
             return $this->pdoStatement->rowCount();
         }
         return false;
+    }
+
+    /**
+     * 生成update的数据和语句
+     * @param $data
+     */
+    private function update_date($data) {
+        //遍历更新的值,加入绑定的value中
+        foreach ($data as $key => $value) {
+            $value = $this->internalBind($key, $value);
+            $this->sql .= '`' . $this->dealField($key) . '` = :' . $value . ',';
+        }
+        $this->dealGarbage($this->sql, 1);
     }
 
     /**

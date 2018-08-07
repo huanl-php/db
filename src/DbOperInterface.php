@@ -109,6 +109,13 @@ interface DbOperInterface {
     public function insert($data): int;
 
     /**
+     * 不存在插入,存在更新
+     * @param $data
+     * @return int
+     */
+    public function insert_duplicate($data):int;
+
+    /**
      * 更新数据
      * @param $data
      * @return int
