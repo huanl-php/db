@@ -543,13 +543,22 @@ class SQLDb extends Db {
                 foreach ($this->bindParam as $key => $value) {
                     $pdoStatement->bindParam($key, $this->bindParam[$key]);
                 }
-
-                if ($pdoStatement->execute()) {
+                if (@$pdoStatement->execute()) {
                     return $this->pdoStatement = $pdoStatement;
+                } else {
+                    $error = $pdoStatement->errorInfo();
+                    if ($error[1]) {
+                        throw new \ErrorException($error[2], $error[1]);
+                    }
                 }
             } else {
-                if ($pdoStatement->execute($this->bindValue)) {
+                if (@$pdoStatement->execute($this->bindValue)) {
                     return $this->pdoStatement = $pdoStatement;
+                } else {
+                    $error = $pdoStatement->errorInfo();
+                    if ($error[1]) {
+                        throw new \ErrorException($error[2], $error[1]);
+                    }
                 }
             }
         } catch (\Throwable $exception) {
