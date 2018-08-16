@@ -562,8 +562,10 @@ class SQLDb extends Db {
                 }
             }
         } catch (\Throwable $exception) {
-            $this->dbConnect->reconnect();
-            return $this->prepare($sql);
+            if (strpos($exception->getMessage(),'failed with errno=10054')) {
+                $this->dbConnect->reconnect();
+                return $this->prepare($sql);
+            }
         }
         return false;
     }
