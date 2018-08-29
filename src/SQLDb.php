@@ -530,15 +530,16 @@ class SQLDb extends Db {
      * 执行预处理语句,返回PDOStatement
      * @param $sql
      * @return bool|\PDOStatement
+     * @throws \Throwable
      */
     protected function prepare($sql) {
         $pdoStatement = null;
-        if (!($pdoStatement = $this->dbConnect->prepare($sql))) {
-            //失败直接返回false
-            return false;
-        }
         //两者冲突
         try {
+            if (!(@$pdoStatement = $this->dbConnect->prepare($sql))) {
+                $error = $pdoStatement->errorInfo();
+                throw new \ErrorException($error[2], $error[1]);
+            }
             if (count($this->bindParam)) {
                 foreach ($this->bindParam as $key => $value) {
                     $pdoStatement->bindParam($key, $this->bindParam[$key]);
@@ -562,10 +563,12 @@ class SQLDb extends Db {
                 }
             }
         } catch (\Throwable $exception) {
-            if (strpos($exception->getMessage(),'failed with errno=10054')) {
+            if (strpos($exception->getMessage(), 'failed with errno=10054') ||
+                strpos($exception->getMessage(), 'General error: 2006 MySQL server has gone away')) {
                 $this->dbConnect->reconnect();
                 return $this->prepare($sql);
             }
+            throw $exception;
         }
         return false;
     }
