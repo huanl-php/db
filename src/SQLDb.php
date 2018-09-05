@@ -563,7 +563,7 @@ class SQLDb extends Db {
                 }
             }
         } catch (\Throwable $exception) {
-            if (strpos($exception->getMessage(), 'failed with errno=10054') ||
+            if (strpos($exception->getMessage(), 'failed with errno=') ||
                 strpos($exception->getMessage(), 'General error: 2006 MySQL server has gone away')) {
                 $this->dbConnect->reconnect();
                 return $this->prepare($sql);
