@@ -517,7 +517,7 @@ class SQLDb extends Db {
      */
     public function count(): int {
         $tmp_field = $this->field;
-        $this->field('count(*)');
+        $this->field = 'count(*)';
         if ($count = $this->find()) {
             $this->field = $tmp_field;
             return $count['count(*)'];
