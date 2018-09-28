@@ -279,6 +279,7 @@ class SQLDb extends Db {
                     $this->where($field, $operator, $value, $this->logicOperator);
                     break;
                 case 4:
+                    $this->dealField($field);
                     //防止SQL注入
                     $key = $this->internalBind($field, $value);
                     $this->logicOperator = $logicOperator;
